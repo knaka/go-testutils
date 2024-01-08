@@ -36,6 +36,9 @@ func filesAreEqual(t testingT, path1, path2 string) (err error) {
 	hash2 := md5.New()
 	_, err = Bind(err, func() (int64, error) { return io.Copy(hash2, reader2) })
 	hashVal2 := hash2.Sum(nil)
+	if err != nil {
+		return
+	}
 	if bytes.Compare(hashVal1, hashVal2) != 0 {
 		return errors.New(fmt.Sprintf("%s differs from %s", path1, path2))
 	}
