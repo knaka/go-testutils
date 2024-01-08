@@ -1,6 +1,6 @@
 # Go-fsassert
 
-Go-fsassert is a library for testing file system operations.
+Go-fsassert is a assertion library for testing files equiality.
 
 ## `fsassert` package
 
