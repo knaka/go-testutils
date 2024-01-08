@@ -46,6 +46,15 @@ func TestAssertDirsEqual(t *testing.T) {
 			},
 			"",
 		},
+		{"ok with glob pattern 2",
+			args{"test/foo-with-metainfo", "test/foo", &DirsAreEqualParams{
+				IgnoreGlobs: []string{
+					"metainfo.*",
+					"*.metainfo",
+				}},
+			},
+			"",
+		},
 		{"dir not exist",
 			args{"test/no", "test/foo", nil},
 			"no such file or directory",
