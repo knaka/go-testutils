@@ -1,6 +1,6 @@
 # Go-testutils
 
-Go-testutils is a collection of utilities for testing.
+Go-testutils is a collection of utilities for testing. Missing features in `os.*`, `"github.com/stretchr/testify/assert"`.
 
 ## `fs` package
 
