@@ -10,7 +10,7 @@ See it in action:
 package main
 
 import (
-	"github.com/knaka/go-fsassert"
+	"github.com/knaka/go-testutils/fsassert"
 )
 
 func TestSomething(t *testing.T) {
