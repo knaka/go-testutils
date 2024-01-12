@@ -1,6 +1,6 @@
-# Go-fsassert
+# Go-testutils
 
-Go-fsassert is a assertion library for testing files equiality.
+Go-testutils is a collection of utilities for testing.
 
 ## `fs` package
 
