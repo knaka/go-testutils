@@ -1,4 +1,4 @@
-module github.com/knaka/go-fsassert
+module github.com/knaka/go-testutils
 
 go 1.18
 
