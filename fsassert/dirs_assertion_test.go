@@ -22,7 +22,7 @@ func TestAssertDirsEqual(t *testing.T) {
 	type args struct {
 		dir1   string
 		dir2   string
-		params *DirsAreEqualParams
+		params []Option
 	}
 	tests := []struct {
 		name           string
@@ -37,21 +37,20 @@ func TestAssertDirsEqual(t *testing.T) {
 			args{"test/foo", "test/foo-with-metainfo", nil},
 			"does not exist in",
 		},
-		{"ok with glob pattern",
-			args{"test/foo", "test/foo-with-metainfo", &DirsAreEqualParams{
-				IgnoreGlobs: []string{
-					"metainfo.*",
-					"*.metainfo",
-				}},
+		{
+			"ok with glob pattern",
+			args{
+				"test/foo",
+				"test/foo-with-metainfo",
+				[]Option{IgnoreGlobs("metainfo.*", "*.metainfo")},
 			},
 			"",
 		},
 		{"ok with glob pattern 2",
-			args{"test/foo-with-metainfo", "test/foo", &DirsAreEqualParams{
-				IgnoreGlobs: []string{
-					"metainfo.*",
-					"*.metainfo",
-				}},
+			args{
+				"test/foo-with-metainfo",
+				"test/foo",
+				[]Option{IgnoreGlobs("metainfo.*", "*.metainfo")},
 			},
 			"",
 		},
@@ -91,7 +90,7 @@ func TestAssertDirsEqual(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tDouble := doubleT{}
-			success := DirsAreEqual(&tDouble, tt.args.dir1, tt.args.dir2, tt.args.params)
+			success := DirsAreEqual(&tDouble, tt.args.dir1, tt.args.dir2, tt.args.params...)
 			if success && tt.errMsgFragment != "" || !success && tt.errMsgFragment == "" {
 				t.Errorf("DirsAreEqual() = %v, want %v, logs %v", success, tt.errMsgFragment, tDouble.logs)
 			}

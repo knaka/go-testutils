@@ -4,66 +4,69 @@ import (
 	"errors"
 	"fmt"
 	. "github.com/knaka/go-utils"
+	"github.com/samber/lo"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-type DirsAreEqualParams struct {
+type dirsAreEqualParams struct {
 	//IgnoreSymlinks bool
 	IgnoreGlobs []string
 }
 
+type Option func(params *dirsAreEqualParams)
+
+func IgnoreGlobs(globs ...string) Option {
+	return func(params *dirsAreEqualParams) {
+		params.IgnoreGlobs = globs
+	}
+}
+
 // DirsAreEqual asserts that two directories are equal.
-func DirsAreEqual(t testingT, dir1 string, dir2 string, params *DirsAreEqualParams) (b bool) {
-	var err error
+func DirsAreEqual(t testingT, dir0 string, dir1 string, opts ...Option) (f bool) {
 	if h, ok := t.(tHelper); ok {
 		h.Helper()
 	}
-	stat1, err := Bind(err, func() (fs.FileInfo, error) { return os.Stat(dir1) })
+	params := &dirsAreEqualParams{}
+	for _, opt := range opts {
+		opt(params)
+	}
+	err := dirsAreEqual(dir0, dir1, params)
 	if err != nil {
 		t.Errorf("%v", err)
-		return
+		return false
 	}
-	if !stat1.IsDir() {
-		t.Errorf("%s is not a directory", dir1)
-		return
-	}
-	stat2, err := Bind(err, func() (fs.FileInfo, error) { return os.Stat(dir2) })
-	if err != nil {
-		t.Errorf("%v", err)
-		return
-	}
-	if !stat2.IsDir() {
-		t.Errorf("%s is not a directory", dir2)
-		return
-	}
-	absDir1, err := Bind(err, func() (string, error) { return filepath.Abs(dir1) })
-	absDir2, err := Bind(err, func() (string, error) { return filepath.Abs(dir2) })
-	if err != nil {
-		t.Errorf("%v", err)
-		return
-	}
-	if absDir1 == absDir2 {
-		t.Errorf("%s and %s are the same directory", dir1, dir2)
-		return
+	return true
+}
+
+func dirsAreEqual(dir0 string, dir1 string, params *dirsAreEqualParams) (err error) {
+	defer Catch(&err)
+	absDirs := lo.Map([]string{dir0, dir1}, func(dir string, _ int) string {
+		if !V(os.Stat(dir)).IsDir() {
+			Throw(errors.New(fmt.Sprintf("%s is not a directory", dir)))
+		}
+		return V(filepath.Abs(dir))
+	})
+	if absDirs[0] == absDirs[1] {
+		return errors.New(fmt.Sprintf("%s is the same directory as %s", dir0, dir1))
 	}
 	var dirLhs, dirRhs string
-	f := func(path string, info fs.FileInfo, errGiven error) (err error) {
+	fn := func(path string, info fs.FileInfo, errGiven error) (err error) {
 		if errGiven != nil {
 			return errGiven
 		}
 		tgtPath := filepath.Join(dirRhs, strings.TrimPrefix(path, dirLhs))
 		if params != nil {
 			for _, glob := range params.IgnoreGlobs {
-				if matched, err := filepath.Match(glob, filepath.Base(path)); err != nil {
-					return err
+				if matched, errSub := filepath.Match(glob, filepath.Base(path)); errSub != nil {
+					return errSub
 				} else if matched {
 					return nil
 				}
-				if matched, err := filepath.Match(glob, filepath.Base(tgtPath)); err != nil {
-					return err
+				if matched, errSub := filepath.Match(glob, filepath.Base(tgtPath)); errSub != nil {
+					return errSub
 				} else if matched {
 					return nil
 				}
@@ -104,22 +107,17 @@ func DirsAreEqual(t testingT, dir1 string, dir2 string, params *DirsAreEqualPara
 				return nil
 			}
 		}
-		return filesAreEqual(t, path, tgtPath)
+		return filesAreEqual(path, tgtPath)
 	}
-	err = Then(err, func() error {
-		dirLhs = dir1
-		dirRhs = dir2
-		return filepath.Walk(dirLhs, f)
-	})
-	err = Then(err, func() error {
-		dirLhs = dir2
-		dirRhs = dir1
-		return filepath.Walk(dirLhs, f)
-	})
-	if err != nil {
-		t.Errorf("%v", err)
+	dirLhs = dir0
+	dirRhs = dir1
+	if err = filepath.Walk(dirLhs, fn); err != nil {
 		return
 	}
-	b = true
-	return
+	dirLhs = dir1
+	dirRhs = dir0
+	if err = filepath.Walk(dirLhs, fn); err != nil {
+		return err
+	}
+	return nil
 }
