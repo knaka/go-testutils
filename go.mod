@@ -3,7 +3,7 @@ module github.com/knaka/go-testutils
 go 1.18
 
 require (
-	github.com/knaka/go-utils v0.0.2024080241
+	github.com/knaka/go-utils v0.0.2024080445
 	github.com/samber/lo v1.46.0
 	github.com/stretchr/testify v1.9.0
 )
