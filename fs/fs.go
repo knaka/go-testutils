@@ -32,9 +32,17 @@ func CopyDir(dst, src string) error {
 			}
 		}
 		reader, err := Bind(err, func() (io.ReadCloser, error) { return os.Open(path) })
-		defer Let0(err, func() { Assert(reader.Close() == nil) })
+		defer Let0(err, func() {
+			if reader.Close() != nil {
+				panic("?")
+			}
+		})
 		outFile, err := Bind(err, func() (*os.File, error) { return os.Create(outPath) })
-		defer Let0(err, func() { Assert(outFile.Close() == nil) })
+		defer Let0(err, func() {
+			if outFile.Close() != nil {
+				panic("?")
+			}
+		})
 		err = Then(err, func() error { return outFile.Chmod(info.Mode()) })
 		_, err = Bind(err, func() (int64, error) { return io.Copy(outFile, reader) })
 		return
