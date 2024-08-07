@@ -9,6 +9,20 @@ import (
 	"strings"
 )
 
+// CanonAbs returns the canonical absolute path of the given value.
+func CanonAbs(s string) (ret string, err error) {
+	ret, err = filepath.Abs(s)
+	if err != nil {
+		return
+	}
+	ret, err = filepath.EvalSymlinks(ret)
+	if err != nil {
+		return
+	}
+	ret = filepath.Clean(ret)
+	return
+}
+
 func CopyFile(dst, src string) (err error) {
 	reader := V(os.Open(src))
 	defer (func() { V0(reader.Close()) })()
