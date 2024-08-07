@@ -9,6 +9,15 @@ import (
 	"strings"
 )
 
+func CopyFile(dst, src string) (err error) {
+	reader := V(os.Open(src))
+	defer (func() { V0(reader.Close()) })()
+	writer := V(os.Create(dst))
+	defer (func() { V0(writer.Close()) })()
+	_, err = io.Copy(writer, reader)
+	return
+}
+
 // CopyDir copies a directory recursively.
 func CopyDir(dst, src string) error {
 	return filepath.Walk(src, func(path string, info fs.FileInfo, errGiven error) (err error) {
