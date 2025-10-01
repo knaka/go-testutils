@@ -1,12 +1,15 @@
+// Package fs is a set of file utilities for testing.
 package fs
 
 import (
-	. "github.com/knaka/go-utils"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+
+	//revive:disable-next-line:dot-imports
+	. "github.com/knaka/go-utils"
 )
 
 // CanonAbs returns the canonical absolute path of the given value.
@@ -23,6 +26,7 @@ func CanonAbs(s string) (ret string, err error) {
 	return
 }
 
+// CopyFile copies a file from src to dst.
 func CopyFile(dst, src string) (err error) {
 	reader := V(os.Open(src))
 	defer (func() { V0(reader.Close()) })()

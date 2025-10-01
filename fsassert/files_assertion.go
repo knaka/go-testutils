@@ -3,12 +3,13 @@ package fsassert
 import (
 	"bytes"
 	"crypto/sha1"
-	"errors"
 	"fmt"
-	"github.com/samber/lo"
 	"io"
 	"os"
 
+	"github.com/samber/lo"
+
+	//revive:disable-next-line:dot-imports
 	. "github.com/knaka/go-utils"
 )
 
@@ -16,7 +17,7 @@ func filesAreEqual(path1 string, path2 string) (err error) {
 	defer Catch(&err)
 	hashVals := lo.Map([]string{path1, path2}, func(path string, _ int) []byte {
 		if V(os.Stat(path)).IsDir() {
-			Throw(errors.New(fmt.Sprintf("%s is a directory", path)))
+			Throw(fmt.Errorf("%s is a directory", path))
 		}
 		reader := V(os.Open(path))
 		defer (func() { V0(reader.Close()) })()
@@ -24,12 +25,14 @@ func filesAreEqual(path1 string, path2 string) (err error) {
 		V0(io.Copy(hash, reader))
 		return hash.Sum(nil)
 	})
-	return TernaryF(bytes.Compare(hashVals[0], hashVals[1]) == 0,
+	return TernaryF(bytes.Equal(hashVals[0], hashVals[1]),
 		func() error { return nil },
-		func() error { return errors.New(fmt.Sprintf("%s differs from %s", path1, path2)) },
+		func() error { return fmt.Errorf("%s differs from %s", path1, path2) },
 	)
 }
 
+// FilesAreEqual asserts that two files are equal by comparing their SHA1 hashes.
+//
 //goland:noinspection GoUnusedExportedFunction
 func FilesAreEqual(t testingT, path1 string, path2 string) bool {
 	err := filesAreEqual(path1, path2)

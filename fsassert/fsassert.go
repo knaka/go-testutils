@@ -1,3 +1,4 @@
+// Package fsassert is a set of assertions for filesystems.
 package fsassert
 
 type tHelper interface {
